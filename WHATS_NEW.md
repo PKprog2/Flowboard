@@ -47,47 +47,50 @@ Your FlowBoard app now has full user authentication and cloud storage powered by
 
 ### ⚙️ Database Setup (IMPORTANT!)
 
-Before users can sign up, you need to create the database table in Supabase:
+**Good news!** The `boards` table already exists in your Supabase database. Now verify the Row Level Security policies are set up:
 
-1. Go to https://supabase.com/dashboard/project/ukiwgiioafkilhcpaymb
-2. Click **SQL Editor** in the left sidebar
-3. Copy and paste this SQL:
+#### Option A: Check if policies exist (Recommended)
+
+1. Go to https://supabase.com/dashboard/project/ukiwgiioafkilhcpaymb/editor
+2. Click **Table Editor** → select `boards` table
+3. Click **RLS** tab (Row Level Security)
+4. You should see 4 policies listed. If not, proceed to Option B.
+
+#### Option B: Add/Update RLS policies only
+
+If policies are missing, run this SQL in the **SQL Editor**:
 
 ```sql
--- Create boards table
-CREATE TABLE boards (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  board_data JSONB NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Enable Row Level Security
+-- Enable Row Level Security (if not already enabled)
 ALTER TABLE boards ENABLE ROW LEVEL SECURITY;
 
--- Policy: Users can only see their own boards
+-- Drop existing policies if any (to avoid conflicts)
+DROP POLICY IF EXISTS "Users can view own boards" ON boards;
+DROP POLICY IF EXISTS "Users can insert own boards" ON boards;
+DROP POLICY IF EXISTS "Users can update own boards" ON boards;
+DROP POLICY IF EXISTS "Users can delete own boards" ON boards;
+
+-- Create fresh policies
 CREATE POLICY "Users can view own boards" 
   ON boards FOR SELECT 
   USING (auth.uid() = user_id);
 
--- Policy: Users can insert their own boards
 CREATE POLICY "Users can insert own boards" 
   ON boards FOR INSERT 
   WITH CHECK (auth.uid() = user_id);
 
--- Policy: Users can update their own boards
 CREATE POLICY "Users can update own boards" 
   ON boards FOR UPDATE 
   USING (auth.uid() = user_id);
 
--- Policy: Users can delete own boards
 CREATE POLICY "Users can delete own boards" 
   ON boards FOR DELETE 
   USING (auth.uid() = user_id);
 ```
 
-4. Click **RUN** to create the table and security policies
+#### Verify Everything Works
+
+After confirming RLS is enabled, your app is ready to use! The database structure is already in place.
 
 ### ✅ Testing Checklist
 
