@@ -3,7 +3,10 @@
    Keeps original features: multiple boards, lists, cards, drag/drop, palettes, stock images, opacity, settings.
 */
 
+import { getCurrentUser, saveBoards, loadBoards, signOut } from './db.js';
+
 const STORAGE_KEY = 'simple_board_v2';
+let currentUser = null;
 
 // Undo history stack
 const undoHistory = [];
@@ -175,10 +178,23 @@ const defaultBoard = {
     ]
 };
 
-function saveData(){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e){ console.warn('saveData failed', e); } }
+async function saveData() { 
+    try { 
+        if (currentUser) {
+            // Save to Supabase
+            await saveBoards(currentUser.id, data);
+        } else {
+            // Fallback to localStorage (shouldn't happen if auth works)
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); 
+        }
+    } catch(e) { 
+        console.warn('saveData failed', e); 
+    } 
+}
+
 function loadData(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e){ return null; } }
 
-// load or initialize
+// Initialize data (will be replaced with Supabase data after auth check)
 let data = loadData();
 if(!data){
     data = { boards: [defaultBoard], activeBoardId: defaultBoard.id };
@@ -1410,5 +1426,79 @@ if(listOpacityInput) listOpacityInput.addEventListener('input', (e)=> {
 // Drag & drop for lists (optional enhancements)
 boardEl && boardEl.addEventListener('dragover', (ev)=> { ev.preventDefault(); });
 
-// Setup initial UI and render
-render();
+// Logout button
+const logoutBtn = document.getElementById('logout-btn');
+if(logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+        if(confirm('Are you sure you want to logout?')) {
+            try {
+                await signOut();
+            } catch(e) {
+                console.error('Logout failed:', e);
+            }
+        }
+    });
+}
+
+// Authentication check and initialization
+async function initializeApp() {
+    try {
+        // Check if user is authenticated
+        currentUser = await getCurrentUser();
+        
+        if (!currentUser) {
+            // Redirect to login if not authenticated
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // Display user email
+        const userEmailEl = document.getElementById('user-email');
+        if (userEmailEl) {
+            userEmailEl.textContent = currentUser.email;
+        }
+        
+        // Load boards from Supabase
+        const cloudData = await loadBoards(currentUser.id);
+        
+        if (cloudData) {
+            // Use cloud data
+            data = cloudData;
+        } else {
+            // Check if user has local data to migrate
+            const localData = loadData();
+            if (localData && localData.boards && localData.boards.length > 0) {
+                // Migrate local data to cloud
+                data = localData;
+                await saveBoards(currentUser.id, data);
+                console.log('Local data migrated to cloud');
+            } else {
+                // Initialize with default board
+                data = { boards: [defaultBoard], activeBoardId: defaultBoard.id };
+                await saveBoards(currentUser.id, data);
+            }
+        }
+        
+        // Ensure data integrity
+        if(!Array.isArray(data.boards) || data.boards.length === 0){
+            data.boards = [defaultBoard];
+        }
+        if(!data.activeBoardId || !data.boards.find(b => b.id === data.activeBoardId)){
+            const found = data.boards.find(b => b.title === defaultBoard.title);
+            data.activeBoardId = (found && found.id) || data.boards[0].id;
+        }
+        
+        // Ensure listOpacity default
+        data.boards.forEach(b=>{ if(typeof b.listOpacity === 'undefined') b.listOpacity = 0.4; });
+        
+        // Setup initial UI and render
+        render();
+        
+    } catch (error) {
+        console.error('Failed to initialize app:', error);
+        alert('Failed to load your boards. Please try refreshing the page.');
+    }
+}
+
+// Start the app
+initializeApp();
