@@ -16,11 +16,45 @@
           <h1>🌊 FlowBoard</h1>
         </div>
         <div class="header-actions">
-          <span id="user-email" style="color: #fff; margin-right: 15px; font-size: 0.9rem;"></span>
           <button id="undo-btn" type="button" class="btn btn-secondary btn-small" title="Nothing to undo" disabled>↶ Undo</button>
-          <button id="settings" type="button" class="header-settings-btn" title="Settings">⚙️</button>
-          <button id="clear" type="button" class="btn btn-danger btn-small" title="Clear board">Clear</button>
-          <button id="logout-btn" type="button" class="btn btn-secondary btn-small" title="Logout">Logout</button>
+          <button id="user-profile-btn" type="button" class="user-profile-btn" title="User profile">
+            <span id="user-initials" class="user-initials"></span>
+          </button>
+        </div>
+        
+        <!-- User Profile Menu -->
+        <div id="user-profile-menu" class="user-profile-menu hidden">
+          <div class="user-profile-header">
+            <div class="user-profile-avatar">
+              <span id="menu-user-initials"></span>
+            </div>
+            <div class="user-profile-info">
+              <div class="user-profile-name" id="user-name"></div>
+              <div class="user-profile-email" id="menu-user-email"></div>
+            </div>
+          </div>
+          <div class="user-profile-divider"></div>
+          <div class="user-profile-item" id="profile-settings">
+            <span>⚙️</span>
+            <span>Settings</span>
+          </div>
+          <div class="user-profile-item" id="profile-export">
+            <span>📥</span>
+            <span>Export Data</span>
+          </div>
+          <div class="user-profile-item" id="profile-theme">
+            <span>🎨</span>
+            <span>Toggle Dark Mode</span>
+          </div>
+          <div class="user-profile-divider"></div>
+          <div class="user-profile-item" id="profile-clear">
+            <span>🗑️</span>
+            <span>Clear Board</span>
+          </div>
+          <div class="user-profile-item danger" id="profile-logout">
+            <span>🚪</span>
+            <span>Log Out</span>
+          </div>
         </div>
       </div>
       
@@ -43,23 +77,31 @@
   <!-- Settings Menu -->
   <div id="settings-menu" class="settings-menu hidden" aria-hidden="true">
     <div class="settings-row">
+      <span class="settings-icon" aria-hidden="true">🎨</span>
       <label for="bg-color">Board Color</label>
       <input id="bg-color" type="color" />
     </div>
     <div class="settings-row">
+      <span class="settings-icon" aria-hidden="true">📤</span>
       <label for="bg-upload">Upload Background</label>
       <input id="bg-upload" type="file" accept="image/*" />
     </div>
     <div class="settings-row">
+      <span class="settings-icon" aria-hidden="true">🖼️</span>
       <label>Stock Images</label>
       <div id="stock-list" class="stock-list"></div>
     </div>
     <div class="settings-row">
+      <span class="settings-icon" aria-hidden="true">🎚️</span>
       <label for="list-opacity">List Opacity</label>
-      <input id="list-opacity" type="range" min="0" max="1" step="0.05" />
-      <span id="list-opacity-val"></span>
+      <div style="display:flex; align-items:center; gap:.5rem; grid-column: 3 / auto;">
+        <input id="list-opacity" type="range" min="0" max="1" step="0.05" />
+        <span id="list-opacity-val"></span>
+      </div>
     </div>
     <div class="settings-row">
+      <span class="settings-icon" aria-hidden="true">🧹</span>
+      <label for="clear-bg" style="visibility:hidden">Clear Background</label>
       <button id="clear-bg" type="button" class="btn btn-secondary btn-small">Clear Background</button>
     </div>
     <div style="text-align:right;margin-top:1rem;">

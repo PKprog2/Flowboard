@@ -385,7 +385,11 @@ function renderBoardTabs(){
         const nb = { 
             id: genId(), 
             title: 'Untitled Board', 
-            bg: '#f4f7fb', 
+            // assign a random stock image as default background
+            bgImage: (typeof STOCK_IMAGES !== 'undefined' && STOCK_IMAGES.length
+                ? STOCK_IMAGES[Math.floor(Math.random()*STOCK_IMAGES.length)]
+                : undefined),
+            bg: '#f4f7fb', // fallback plain color if image cleared
             lists: [
                 { id: genId(), title: 'To-do', cards: [] },
                 { id: genId(), title: 'In Progress', cards: [] },
@@ -487,6 +491,66 @@ function formatDate(iso){
         if(isNaN(d)) return iso;
         return d.toLocaleDateString();
     } catch(e){ return iso; }
+}
+
+// Inline date picker popup (small floating input)
+function openInlineDatePicker(card, anchorEl){
+    // Close any existing picker
+    document.querySelectorAll('.date-pop').forEach(el => el.remove());
+    const pop = document.createElement('div');
+    pop.className = 'date-pop';
+    const input = document.createElement('input');
+    input.type = 'date';
+    input.value = card.due || '';
+    input.className = 'date-pop-input';
+    const btnRow = document.createElement('div');
+    btnRow.className = 'date-pop-buttons';
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.textContent = 'Clear';
+    clearBtn.className = 'date-pop-clear';
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.textContent = 'Close';
+    closeBtn.className = 'date-pop-close';
+    btnRow.appendChild(clearBtn);
+    btnRow.appendChild(closeBtn);
+    pop.appendChild(input);
+    pop.appendChild(btnRow);
+    document.body.appendChild(pop);
+    // Position near anchor
+    try {
+        const r = anchorEl.getBoundingClientRect();
+        const scrollY = window.scrollY || document.documentElement.scrollTop;
+        const scrollX = window.scrollX || document.documentElement.scrollLeft;
+        pop.style.left = (r.left + scrollX) + 'px';
+        pop.style.top = (r.bottom + scrollY + 4) + 'px';
+    } catch(e) {}
+
+    const close = () => { pop.remove(); document.removeEventListener('mousedown', onDocClick); };
+    const onDocClick = (ev) => {
+        if(!pop.contains(ev.target) && ev.target !== anchorEl){ close(); }
+    };
+    document.addEventListener('mousedown', onDocClick);
+
+    input.addEventListener('change', () => {
+        pushUndoState();
+        card.due = input.value || '';
+        saveRender();
+        close();
+    });
+    // If there is a current value and user clicks outside without change, still close
+    input.addEventListener('blur', () => {
+        // timeout allows click on buttons to register
+        setTimeout(() => { if(document.body.contains(pop)) close(); }, 120);
+    });
+    clearBtn.addEventListener('click', () => {
+        pushUndoState();
+        card.due = '';
+        saveRender();
+        close();
+    });
+    closeBtn.addEventListener('click', close);
 }
 
 function hexToRgba(hex, alpha = 1){
@@ -680,6 +744,165 @@ function moveList(draggedListId, targetListId){
     saveRender();
 }
 
+// Open list settings menu (sort, delete, etc.)
+function openListSettingsMenu(listId, buttonEl) {
+    const board = getActiveBoard();
+    const list = board.lists.find(l => l.id === listId);
+    if(!list) return;
+
+    // Remove any existing menu
+    const existingMenu = document.querySelector('.list-settings-menu');
+    if(existingMenu) existingMenu.remove();
+
+    // Create menu
+    const menu = document.createElement('div');
+    menu.className = 'list-settings-menu';
+
+    // Position menu at button
+    const rect = buttonEl.getBoundingClientRect();
+    menu.style.position = 'fixed';
+    menu.style.top = (rect.bottom + 5) + 'px';
+    menu.style.right = (window.innerWidth - rect.right) + 'px';
+
+    // Color picker section
+    const colorSection = document.createElement('div');
+    colorSection.className = 'list-settings-section';
+    
+    const colorLabel = document.createElement('div');
+    colorLabel.className = 'list-settings-label';
+    colorLabel.textContent = 'List Color';
+    colorSection.appendChild(colorLabel);
+
+    const colorSwatches = document.createElement('div');
+    colorSwatches.className = 'color-swatches';
+    const PRESET_COLORS = ['#ebecf0', '#ffd166', '#06d6a0', '#ef476f', '#118ab2', '#f8f9fa'];
+    
+    PRESET_COLORS.forEach((color) => {
+        const swatch = document.createElement('button');
+        swatch.type = 'button';
+        swatch.className = 'color-swatch-mini';
+        swatch.style.backgroundColor = color;
+        swatch.title = color;
+        if(list.color === color) {
+            swatch.classList.add('active');
+        }
+        swatch.addEventListener('click', (e) => {
+            e.stopPropagation();
+            pushUndoState();
+            list.color = color;
+            const listEl = document.querySelector(`[data-list-id="${listId}"]`);
+            if(listEl) {
+                listEl.style.backgroundColor = hexToRgba(color, board.listOpacity || 0.95);
+            }
+            saveData();
+            menu.remove();
+        });
+        colorSwatches.appendChild(swatch);
+    });
+    
+    colorSection.appendChild(colorSwatches);
+    menu.appendChild(colorSection);
+
+    // Divider
+    const divider1 = document.createElement('div');
+    divider1.className = 'list-settings-divider';
+    menu.appendChild(divider1);
+
+    // Sort section
+    const sortSection = document.createElement('div');
+    sortSection.className = 'list-settings-section';
+    
+    const sortLabel = document.createElement('div');
+    sortLabel.className = 'list-settings-label';
+    sortLabel.textContent = 'Sort Cards';
+    sortSection.appendChild(sortLabel);
+
+    const sortAlpha = document.createElement('div');
+    sortAlpha.className = 'list-settings-item';
+    sortAlpha.innerHTML = '<span>📝</span> Sort A-Z';
+    sortAlpha.addEventListener('click', () => {
+        pushUndoState();
+        list.cards.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        saveRender();
+        menu.remove();
+    });
+
+    const sortDate = document.createElement('div');
+    sortDate.className = 'list-settings-item';
+    sortDate.innerHTML = '<span>📅</span> Sort by Date';
+    sortDate.addEventListener('click', () => {
+        pushUndoState();
+        list.cards.sort((a, b) => {
+            if(!a.due && !b.due) return 0;
+            if(!a.due) return 1;
+            if(!b.due) return -1;
+            return a.due.localeCompare(b.due);
+        });
+        saveRender();
+        menu.remove();
+    });
+
+    const sortPriority = document.createElement('div');
+    sortPriority.className = 'list-settings-item';
+    sortPriority.innerHTML = '<span>🚩</span> Sort by Priority';
+    sortPriority.addEventListener('click', () => {
+        const val = (p) => {
+            switch(p){
+                case 'high': return 3;
+                case 'medium': return 2;
+                case 'low': return 1;
+                default: return 0;
+            }
+        };
+        pushUndoState();
+        list.cards.sort((a,b) => {
+            const diff = val(b.priority) - val(a.priority); // high first
+            if(diff !== 0) return diff;
+            return (a.name || '').localeCompare(b.name || '');
+        });
+        saveRender();
+        menu.remove();
+    });
+
+    sortSection.appendChild(sortAlpha);
+    sortSection.appendChild(sortDate);
+    sortSection.appendChild(sortPriority);
+    menu.appendChild(sortSection);
+
+    // Divider
+    const divider2 = document.createElement('div');
+    divider2.className = 'list-settings-divider';
+    menu.appendChild(divider2);
+
+    // Delete section
+    const deleteList = document.createElement('div');
+    deleteList.className = 'list-settings-item danger';
+    deleteList.innerHTML = '<span>🗑️</span> Delete List';
+    deleteList.addEventListener('click', () => {
+        if(confirm('Delete list and all its cards?')) {
+            pushUndoState();
+            const idx = board.lists.findIndex(l => l.id === listId);
+            if(idx > -1) {
+                board.lists.splice(idx, 1);
+                saveRender();
+            }
+        }
+        menu.remove();
+    });
+    menu.appendChild(deleteList);
+
+    document.body.appendChild(menu);
+
+    // Close menu when clicking outside
+    const closeMenu = (e) => {
+        if(!menu.contains(e.target) && e.target !== buttonEl) {
+            menu.remove();
+            document.removeEventListener('click', closeMenu);
+        }
+    };
+    setTimeout(() => document.addEventListener('click', closeMenu), 10);
+}
+
 // render function: constructs board DOM
 function render(){
     renderBoardTabs();
@@ -722,8 +945,9 @@ function render(){
         listEl.style.backgroundColor = hexToRgba(bgColor, opacity);
         listEl.style.position = 'relative';
 
-        const header = document.createElement('div'); header.className = 'list-header';
-        const title = document.createElement('div'); title.className = 'list-title';
+    const header = document.createElement('div'); header.className = 'list-header';
+    const leftSpacer = document.createElement('div'); leftSpacer.className = 'list-header-spacer';
+    const title = document.createElement('div'); title.className = 'list-title';
         
         // Don't allow editing "Done" list title
         const isDoneList = list.title.toLowerCase() === 'done';
@@ -747,176 +971,214 @@ function render(){
             title.style.opacity = '0.9';
         }
 
-        const del = document.createElement('button'); del.className = 'trash'; del.innerText='✕';
-        del.title='Delete list';
-        del.addEventListener('click', ()=> {
-            if(confirm('Delete list and its cards?')) {
-                pushUndoState();
-                const board = getActiveBoard();
-                const idx = board.lists.findIndex(l=>l.id===list.id);
-                if(idx>-1){ board.lists.splice(idx,1); saveRender(); }
-            }
+        // Inline delete button removed (functionality now lives in list settings menu)
+
+    // Settings button (3-dot menu)
+        const settingsBtn = document.createElement('button');
+        settingsBtn.type = 'button';
+        settingsBtn.className = 'list-settings-btn';
+        settingsBtn.title = 'List settings';
+        settingsBtn.innerHTML = '⋮';
+        settingsBtn.draggable = false;
+        settingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openListSettingsMenu(list.id, settingsBtn);
         });
 
-        const brushBtn = document.createElement('button');
-        brushBtn.type = 'button';
-        brushBtn.className = 'list-brush';
-        brushBtn.title = 'Choose list color';
-        brushBtn.innerHTML = '🖌';
-        brushBtn.draggable = false;
-        brushBtn.setAttribute('aria-haspopup', 'true');
-        brushBtn.setAttribute('aria-expanded', 'false');
-        brushBtn.setAttribute('aria-controls', 'palette-' + list.id);
-
-        const palette = document.createElement('div');
-        palette.className = 'color-palette hidden';
-        palette.id = 'palette-' + list.id;
-        palette.setAttribute('role', 'menu');
-        palette.setAttribute('aria-hidden', 'true');
-        palette.tabIndex = -1;
-
-        const PRESET_COLORS = ['#ebecf0','#ffd166','#06d6a0','#ef476f','#118ab2'];
-        PRESET_COLORS.forEach((c) => {
-            const sw = document.createElement('button');
-            sw.type = 'button';
-            sw.className = 'color-swatch';
-            sw.style.background = c;
-            sw.title = c;
-            sw.setAttribute('role', 'menuitem');
-            sw.tabIndex = 0;
-            sw.addEventListener('click', (ev)=> {
-                list.color = c;
-                listEl.style.backgroundColor = hexToRgba(c, board.listOpacity);
-                saveRender();
-                closeAllPalettes();
-                brushBtn.focus();
-            });
-            sw.addEventListener('keydown', (ev) => {
-                if(ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); sw.click(); }
-                if(ev.key === 'Escape') { closeAllPalettes(); brushBtn.focus(); }
-            });
-            palette.appendChild(sw);
-        });
-
-        const pickerWrap = document.createElement('div');
-        pickerWrap.className = 'color-picker-wrap';
-        const picker = document.createElement('input');
-        picker.type = 'color';
-        picker.className = 'color-picker';
-        picker.value = list.color || '#ebecf0';
-        picker.title = 'Pick custom color';
-        picker.setAttribute('role','menuitem');
-        picker.addEventListener('input', (ev) => {
-            ev.stopPropagation();
-            const c = ev.target.value;
-            list.color = c;
-            listEl.style.backgroundColor = hexToRgba(c, board.listOpacity);
-            saveRender();
-        });
-        picker.addEventListener('keydown', (ev) => {
-            if(ev.key === 'Escape') { closeAllPalettes(); brushBtn.focus(); }
-        });
-        pickerWrap.appendChild(picker);
-        palette.appendChild(pickerWrap);
-
-        function openPalette() {
-            closeAllPalettes();
-            palette.classList.remove('hidden'); palette.classList.add('open');
-            palette.setAttribute('aria-hidden','false'); brushBtn.setAttribute('aria-expanded','true');
-            const first = palette.querySelector('.color-swatch, .color-picker');
-            if(first) first.focus();
-        }
-        function closePalette() {
-            palette.classList.add('hidden'); palette.classList.remove('open');
-            palette.setAttribute('aria-hidden','true'); brushBtn.setAttribute('aria-expanded','false');
-        }
-
-        brushBtn.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            if(palette.classList.contains('open')) closePalette();
-            else openPalette();
-        });
-        brushBtn.addEventListener('keydown', (ev) => {
-            if(ev.key === 'ArrowDown' || ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openPalette(); }
-            if(ev.key === 'Escape') closePalette();
-        });
-
-        ['pointerdown','mousedown','touchstart'].forEach(n => brushBtn.addEventListener(n, e=> e.stopPropagation(), {passive:true}));
-        palette.addEventListener('pointerdown', e => e.stopPropagation());
-
-        header.appendChild(title);
-        header.appendChild(del);
-        header.appendChild(brushBtn);
-        header.appendChild(palette);
+    header.appendChild(leftSpacer);
+    header.appendChild(title);
+    header.appendChild(settingsBtn);
         listEl.appendChild(header);
+
+        // Resize handles (left and right edges)
+        const resizeLeft = document.createElement('div');
+        resizeLeft.className = 'resize-handle resize-left';
+        resizeLeft.dataset.side = 'left';
+
+        const resizeRight = document.createElement('div');
+        resizeRight.className = 'resize-handle resize-right';
+        resizeRight.dataset.side = 'right';
+
+        listEl.appendChild(resizeLeft);
+        listEl.appendChild(resizeRight);
+
+        // Add resize functionality
+        [resizeLeft, resizeRight].forEach(handle => {
+            handle.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const startX = e.clientX;
+                const startWidth = listEl.offsetWidth;
+                listEl.classList.add('resizing');
+
+                const onMouseMove = (moveE) => {
+                    const delta = moveE.clientX - startX;
+                    const newWidth = Math.max(250, Math.min(600, startWidth + delta));
+                    listEl.style.width = newWidth + 'px';
+                    list.width = newWidth; // Save to data
+                };
+
+                const onMouseUp = () => {
+                    listEl.classList.remove('resizing');
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    saveData();
+                };
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        });
+
+        // Apply saved width
+        if(list.width) {
+            listEl.style.width = list.width + 'px';
+        }
 
         const cardsContainer = document.createElement('div');
         cardsContainer.className = 'cards';
         list.cards.forEach(card => {
+            // Backward compatibility: migrate old 'important' boolean to priority
+            if(card.important && !card.priority){ card.priority = 'high'; }
             const cardEl = document.createElement('div');
-            cardEl.className = 'card' + (card.completed ? ' completed' : '');
+            cardEl.className = 'card' + (card.completed ? ' completed' : '') + (card.due ? ' has-due' : '');
             cardEl.draggable = true;
             cardEl.dataset.cardId = card.id;
             cardEl.dataset.listId = list.id;
 
-            const leftWrap = document.createElement('div');
-            leftWrap.style.display = 'flex';
-            leftWrap.style.alignItems = 'center';
-            leftWrap.style.gap = '8px';
-            leftWrap.style.flex = '1';
+            // === Card hover controls (EasyNotes style) ===
+            const cardHead = document.createElement('div');
+            cardHead.className = 'card-head';
 
-            // --- Clean SVG version of complete button ---
-// --- Clean SVG version of complete button ---
-const completeBtn = document.createElement('button');
-completeBtn.type = 'button';
-completeBtn.className = 'complete-btn' + (card.completed ? ' completed' : '');
-completeBtn.title = card.completed ? 'Mark as incomplete' : 'Mark complete';
-completeBtn.innerHTML = `
-  <svg viewBox="0 0 24 24" class="check-icon" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" class="circle"/>
-    <path d="M7 12l3 3 7-7" class="check" />
-  </svg>
-`;
-completeBtn.draggable = false;
+            // Left hover controls: date picker and importance flag
+            const cardHeadLeft = document.createElement('div');
+            cardHeadLeft.className = 'card-head-left';
 
-// --- working click behavior with fireworks + Done list ---
-completeBtn.addEventListener('click', (ev) => {
-  const board = getActiveBoard();
-  if (!board) return;
+            // Date picker button (calendar icon)
+            const dateBtn = document.createElement('button');
+            dateBtn.type = 'button';
+            dateBtn.className = 'icon-btn date-btn';
+            dateBtn.title = 'Set due date';
+            dateBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+            </svg>`;
+            dateBtn.draggable = false;
+            dateBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openInlineDatePicker(card, dateBtn);
+            });
 
-  if (card.completed) {
-    // un-complete
-    card.completed = false;
-    const prevId = card._prevListId;
-    delete card._prevListId;
-    let destList = board.lists.find(l => l.id === prevId);
-    if (!destList)
-      destList = board.lists.find(l => !(l.title && l.title.toLowerCase() === 'done'));
-    if (destList) moveCard(card.id, list.id, destList.id, null);
-    else saveRender();
-  } else {
-    // complete
-    card._prevListId = list.id;
-    card.completed = true;
+            // Priority flag button (cycles: none -> low -> medium -> high -> none)
+            const flagBtn = document.createElement('button');
+            flagBtn.type = 'button';
+            flagBtn.className = 'icon-btn flag-btn';
+            flagBtn.title = 'Set priority';
+            flagBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/>
+            </svg>`;
+            flagBtn.draggable = false;
+            const applyPriorityColor = () => {
+                const map = { high: '#ef4444', medium: '#f59e0b', low: '#10b981' };
+                flagBtn.style.color = map[card.priority] || '#5a6278';
+            };
+            applyPriorityColor();
+            flagBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                pushUndoState();
+                const order = [null, 'low', 'medium', 'high'];
+                const idx = order.indexOf(card.priority || null);
+                const next = order[(idx + 1) % order.length];
+                card.priority = next;
+                saveRender();
+            });
 
-    // Find or create Done list
-    let doneList = board.lists.find(l => l.title && l.title.toLowerCase() === 'done');
-    if (!doneList) {
-      doneList = { id: genId(), title: 'Done', cards: [] };
-      board.lists.push(doneList);
-    }
+            cardHeadLeft.appendChild(dateBtn);
+            cardHeadLeft.appendChild(flagBtn);
 
-    // move card, then show fireworks
-    moveCard(card.id, list.id, doneList.id, null);
-    saveRender();
-    try {
-      const r = cardEl.getBoundingClientRect();
-      spawnFireworks(r.left + r.width / 2, r.top + r.height / 2);
-    } catch (e) {}
-  }
-});
+            // Right hover controls: complete and delete
+            const cardHeadRight = document.createElement('div');
+            cardHeadRight.className = 'card-head-right';
 
+            // Complete button (checkmark icon)
+            const completeBtn = document.createElement('button');
+            completeBtn.type = 'button';
+            completeBtn.className = 'icon-btn complete-btn';
+            completeBtn.title = card.completed ? 'Mark as incomplete' : 'Mark complete';
+            completeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M20 6L9 17l-5-5"/>
+            </svg>`;
+            completeBtn.draggable = false;
+            completeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const board = getActiveBoard();
+                if (!board) return;
 
+                if (card.completed) {
+                    // un-complete
+                    card.completed = false;
+                    const prevId = card._prevListId;
+                    delete card._prevListId;
+                    let destList = board.lists.find(l => l.id === prevId);
+                    if (!destList)
+                        destList = board.lists.find(l => !(l.title && l.title.toLowerCase() === 'done'));
+                    if (destList) moveCard(card.id, list.id, destList.id, null);
+                    else saveRender();
+                } else {
+                    // complete
+                    card._prevListId = list.id;
+                    card.completed = true;
+
+                    // Find or create Done list
+                    let doneList = board.lists.find(l => l.title && l.title.toLowerCase() === 'done');
+                    if (!doneList) {
+                        doneList = { id: genId(), title: 'Done', cards: [] };
+                        board.lists.push(doneList);
+                    }
+
+                    // move card, then show fireworks
+                    moveCard(card.id, list.id, doneList.id, null);
+                    saveRender();
+                    try {
+                        const r = cardEl.getBoundingClientRect();
+                        spawnFireworks(r.left + r.width / 2, r.top + r.height / 2);
+                    } catch (e) {}
+                }
+            });
+
+            // Delete button (trash icon)
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'icon-btn delete-btn';
+            deleteBtn.title = 'Delete card';
+            deleteBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>`;
+            deleteBtn.draggable = false;
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                pushUndoState();
+                const board = getActiveBoard();
+                const l = board.lists.find(x => x.id === list.id);
+                const idx = l.cards.findIndex(c => c.id === card.id);
+                if(idx > -1) { l.cards.splice(idx, 1); saveRender(); }
+            });
+
+            cardHeadRight.appendChild(completeBtn);
+            cardHeadRight.appendChild(deleteBtn);
+
+            cardHead.appendChild(cardHeadLeft);
+            cardHead.appendChild(cardHeadRight);
+            cardEl.appendChild(cardHead);
+
+            // Priority label badge on the card when priority is set
+            if(card.priority){
+                const label = document.createElement('div');
+                label.className = 'priority-label ' + card.priority;
+                label.textContent = (card.priority || '').toUpperCase();
+                cardEl.appendChild(label);
+            }
+
+            // === Card content (name and editable text) ===
             const txtWrap = document.createElement('div');
             txtWrap.className = 'card-text';
             txtWrap.style.flex = '1';
@@ -929,33 +1191,49 @@ completeBtn.addEventListener('click', (ev) => {
                 card.name = nameEl.innerText.trim();
                 saveData();
             });
-            nameEl.addEventListener('keydown', (e)=> { if(e.key==='Enter'){ e.preventDefault(); nameEl.blur(); }});
-
-            const dueEl = document.createElement('div');
-            dueEl.className = 'card-due muted';
-            dueEl.innerText = card.due ? ('Due: ' + formatDate(card.due)) : '';
-
-            txtWrap.appendChild(nameEl);
-            txtWrap.appendChild(dueEl);
-
-            leftWrap.appendChild(completeBtn);
-            leftWrap.appendChild(txtWrap);
-
-            const remove = document.createElement('button');
-            remove.className='trash';
-            remove.type = 'button';
-            remove.innerText='🗑';
-            remove.title='Delete card';
-            remove.addEventListener('click', ()=> {
-                pushUndoState();
-                const board = getActiveBoard();
-                const l = board.lists.find(x=>x.id===list.id);
-                const idx = l.cards.findIndex(c=>c.id===card.id);
-                if(idx>-1){ l.cards.splice(idx,1); saveRender(); }
+            nameEl.addEventListener('keydown', (e)=> {
+                if(e.key === 'Enter'){
+                    if(e.shiftKey){
+                        // Insert a line break to allow multiline editing
+                        e.preventDefault();
+                        try { document.execCommand('insertLineBreak'); } catch(_) {}
+                    } else {
+                        e.preventDefault();
+                        nameEl.blur();
+                    }
+                }
             });
 
-            cardEl.appendChild(leftWrap);
-            cardEl.appendChild(remove);
+            txtWrap.appendChild(nameEl);
+
+            // Due date display (persistent when set)
+            if(card.due) {
+                const dueRow = document.createElement('div');
+                dueRow.className = 'card-due-row';
+                
+                const dueDateBtn = document.createElement('button');
+                dueDateBtn.type = 'button';
+                dueDateBtn.className = 'card-date-btn';
+                dueDateBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                </svg>`;
+                dueDateBtn.draggable = false;
+                dueDateBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openInlineDatePicker(card, dueDateBtn);
+                });
+                
+                const dueText = document.createElement('span');
+                dueText.className = 'card-due';
+                dueText.innerText = formatDate(card.due);
+                
+                dueRow.appendChild(dueDateBtn);
+                dueRow.appendChild(dueText);
+                // Place inside text wrapper to keep layout compact
+                txtWrap.appendChild(dueRow);
+            }
+
+            cardEl.appendChild(txtWrap);
 
             // drag events
             cardEl.addEventListener('dragstart', (ev)=> {
@@ -1049,7 +1327,7 @@ completeBtn.addEventListener('click', (ev) => {
             const name = nameInput.value.trim();
             if(!name){ nameInput.focus(); return; }
             const board = getActiveBoard();
-            list.cards.push({ id: genId(), name, due: '' });
+            list.cards.push({ id: genId(), name, due: '', priority: null });
             nameInput.value = '';
             
             // Save and mark this list's form as active
@@ -1256,29 +1534,19 @@ function closeAllPalettes(){
     document.querySelectorAll('.color-palette').forEach(p=>p.classList.add('hidden'));
 }
 
-// settings UI wiring
-if(settingsBtn) settingsBtn.addEventListener('click', ()=> {
-    const board = getActiveBoard();
-    if(bgColorInput) bgColorInput.value = board.bg || '#f4f7fb';
-    if(bgUpload) try{ bgUpload.value = ''; }catch(e){}
-    renderStockThumbnails();
-    if(listOpacityInput && typeof board.listOpacity !== 'undefined'){
-        listOpacityInput.value = board.listOpacity;
-        if(listOpacityVal) listOpacityVal.innerText = Math.round(board.listOpacity * 100) + '%';
-    }
-    const isHidden = settingsMenu.classList.toggle('hidden');
-    settingsMenu.setAttribute('aria-hidden', isHidden);
-});
+// Settings menu close handlers
 document.addEventListener('click', (e) => {
     if(!settingsMenu) return;
     if(settingsMenu.classList.contains('hidden')) {
         closeAllPalettes();
         return;
     }
-    if(settingsMenu.contains(e.target) || (settingsBtn && settingsBtn.contains(e.target))) return;
-    settingsMenu.classList.add('hidden');
-    settingsMenu.setAttribute('aria-hidden','true');
-    closeAllPalettes();
+    // Close if clicking outside the menu
+    if(!settingsMenu.contains(e.target)) {
+        settingsMenu.classList.add('hidden');
+        settingsMenu.setAttribute('aria-hidden','true');
+        closeAllPalettes();
+    }
 });
 document.addEventListener('keydown', (e) => {
     if(e.key === 'Escape'){
@@ -1426,18 +1694,159 @@ if(listOpacityInput) listOpacityInput.addEventListener('input', (e)=> {
 // Drag & drop for lists (optional enhancements)
 boardEl && boardEl.addEventListener('dragover', (ev)=> { ev.preventDefault(); });
 
-// Logout button
-const logoutBtn = document.getElementById('logout-btn');
-if(logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-        if(confirm('Are you sure you want to logout?')) {
-            try {
-                await signOut();
-            } catch(e) {
-                console.error('Logout failed:', e);
+// User profile menu functionality
+function setupUserProfile(user) {
+    const profileBtn = document.getElementById('user-profile-btn');
+    const profileMenu = document.getElementById('user-profile-menu');
+    const userInitials = document.getElementById('user-initials');
+    const menuUserInitials = document.getElementById('menu-user-initials');
+    const userName = document.getElementById('user-name');
+    const menuUserEmail = document.getElementById('menu-user-email');
+    
+    // Extract initials from email
+    const email = user.email;
+    const namePart = email.split('@')[0];
+    const initials = namePart.slice(0, 2).toUpperCase();
+    
+    // Set user info
+    if(userInitials) userInitials.textContent = initials;
+    if(menuUserInitials) menuUserInitials.textContent = initials;
+    if(userName) userName.textContent = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+    if(menuUserEmail) menuUserEmail.textContent = email;
+    
+    // Toggle menu
+    if(profileBtn) {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isHidden = profileMenu.classList.contains('hidden');
+            profileMenu.classList.toggle('hidden');
+        });
+    }
+    
+    // Close menu when clicking outside - use setTimeout to avoid immediate trigger
+    setTimeout(() => {
+        document.addEventListener('click', (e) => {
+            if(profileMenu && !profileMenu.classList.contains('hidden') && 
+               !profileMenu.contains(e.target) && !profileBtn.contains(e.target)) {
+                profileMenu.classList.add('hidden');
             }
-        }
-    });
+        });
+    }, 100);
+    
+    // Settings button
+    const settingsItem = document.getElementById('profile-settings');
+    if(settingsItem) {
+        settingsItem.addEventListener('click', (e) => {
+            // Prevent the global document click handler from immediately closing the menu
+            e.stopPropagation();
+            profileMenu.classList.add('hidden');
+            
+            // Get elements
+            const settingsMenu = document.getElementById('settings-menu');
+            const bgColorInput = document.getElementById('bg-color');
+            const bgUpload = document.getElementById('bg-upload');
+            const listOpacityInput = document.getElementById('list-opacity');
+            const listOpacityVal = document.getElementById('list-opacity-val');
+            const stockList = document.getElementById('stock-list');
+            
+            if(!settingsMenu) return;
+            
+            const board = getActiveBoard();
+            if(!board) return;
+            
+            // Populate settings values
+            if(bgColorInput) bgColorInput.value = board.bg || '#f4f7fb';
+            if(bgUpload) try{ bgUpload.value = ''; }catch(e){}
+            
+            // Render stock images
+            if(stockList) {
+                stockList.innerHTML = '';
+                STOCK_IMAGES.forEach(src => {
+                    const btn = document.createElement('button');
+                    btn.className = 'stock-thumb';
+                    btn.style.backgroundImage = `url('${src}')`;
+                    btn.addEventListener('click', ()=> {
+                        board.bgImage = src;
+                        saveRender();
+                    });
+                    stockList.appendChild(btn);
+                });
+            }
+            
+            if(listOpacityInput && typeof board.listOpacity !== 'undefined'){
+                listOpacityInput.value = board.listOpacity;
+                if(listOpacityVal) listOpacityVal.innerText = Math.round(board.listOpacity * 100) + '%';
+            }
+            
+            // Show settings menu (defer slightly to avoid any race with other click handlers)
+            setTimeout(() => {
+                settingsMenu.classList.remove('hidden');
+                settingsMenu.setAttribute('aria-hidden', 'false');
+            }, 0);
+        });
+    }
+    
+    // Export data feature
+    const exportItem = document.getElementById('profile-export');
+    if(exportItem) {
+        exportItem.addEventListener('click', () => {
+            profileMenu.classList.add('hidden');
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `flowboard-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        });
+    }
+    
+    // Dark mode toggle feature
+    const themeItem = document.getElementById('profile-theme');
+    if(themeItem) {
+        themeItem.addEventListener('click', () => {
+            profileMenu.classList.add('hidden');
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+        });
+    }
+    
+    // Apply saved dark mode preference
+    if(localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+    }
+    
+    // Clear board button
+    const clearItem = document.getElementById('profile-clear');
+    if(clearItem) {
+        clearItem.addEventListener('click', async () => {
+            profileMenu.classList.add('hidden');
+            const confirmed = await showConfirmModal('Clear Entire Board?', 'This will remove all lists and cards. This action cannot be undone.');
+            if(confirmed) {
+                pushUndoState();
+                const board = getActiveBoard();
+                board.lists = [];
+                saveRender();
+            }
+        });
+    }
+    
+    // Logout button
+    const logoutItem = document.getElementById('profile-logout');
+    if(logoutItem) {
+        logoutItem.addEventListener('click', async () => {
+            profileMenu.classList.add('hidden');
+            if(confirm('Are you sure you want to logout?')) {
+                try {
+                    await signOut();
+                } catch(e) {
+                    console.error('Logout failed:', e);
+                }
+            }
+        });
+    }
 }
 
 // Authentication check and initialization
@@ -1452,11 +1861,8 @@ async function initializeApp() {
             return;
         }
         
-        // Display user email
-        const userEmailEl = document.getElementById('user-email');
-        if (userEmailEl) {
-            userEmailEl.textContent = currentUser.email;
-        }
+        // Setup user profile display
+        setupUserProfile(currentUser);
         
         // Load boards from Supabase
         const cloudData = await loadBoards(currentUser.id);

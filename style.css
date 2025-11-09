@@ -6,26 +6,27 @@
 }
 
 :root {
-    /* Easynotes-inspired shadow system */
+    /* EasyNotes shadow system */
     --shadow-cat: 0 1px 1px rgba(15, 23, 42, 0.04),
                   0 4px 8px rgba(15, 23, 42, 0.08),
                   0 12px 24px rgba(15, 23, 42, 0.06);
-    --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06),
-                   0 4px 8px rgba(15, 23, 42, 0.06);
-    --shadow-card-hover: 0 8px 16px rgba(15, 23, 42, 0.10),
-                         0 2px 4px rgba(15, 23, 42, 0.06);
-    --shadow-lg: 0 8px 24px rgba(0,0,0,.15);
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-card-hover: 0 1px 8px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0,0,0,0.20);
     
-    /* Color palette */
+    /* FlowBoard water theme colors */
     --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --accent: #667eea;
-    --accent-hover: #5568d3;
+    --accent: #00d4ff;
+    --accent-mid: #0099ff;
+    --accent-dark: #0066ff;
+    --accent-hover: #0088ee;
     --danger: #ef4444;
     --success: #5aac44;
-    --text-dark: #0f172a;
-    --text-light: #5e6c84;
+    --text-dark: #333;
+    --text-light: #666;
+    --text-muted: #999;
     --card-bg: #ffffff;
     --list-bg: #f8f9fa;
+    --border-light: #e0e0e0;
 }
 
 html, body {
@@ -39,6 +40,11 @@ body {
     background: var(--bg-gradient);
     min-height: 100vh;
     color: var(--text-dark);
+}
+
+/* Global hidden class */
+.hidden {
+    display: none !important;
 }
 
 #app {
@@ -63,13 +69,16 @@ body {
 }
 
 .header-top {
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
-    padding: 1rem 2rem;
+    padding: 0.75rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
+    box-shadow: none;
+    position: relative;
+    z-index: 10050;
 }
 
 .header-left {
@@ -96,6 +105,139 @@ body {
     display: flex;
     gap: 0.75rem;
     align-items: center;
+    position: relative;
+}
+
+/* User Profile Button */
+.user-profile-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(0,0,0,.2);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.user-profile-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 5px 15px rgba(0,0,0,.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.user-initials {
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* User Profile Menu */
+.user-profile-menu {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.15);
+    min-width: 280px;
+    z-index: 20000;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-profile-header {
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-profile-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.user-profile-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-profile-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.user-profile-email {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-profile-divider {
+    height: 1px;
+    background: rgba(0,0,0,0.08);
+    margin: 0.25rem 0;
+}
+
+.user-profile-item {
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+}
+
+.user-profile-item span:first-child {
+    font-size: 1.1rem;
+    width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-profile-item:hover {
+    background: rgba(0,0,0,0.04);
+}
+
+.user-profile-item.danger {
+    color: var(--danger);
+}
+
+.user-profile-item.danger:hover {
+    background: rgba(239, 68, 68, 0.08);
 }
 
 .header-settings-btn {
@@ -120,47 +262,45 @@ body {
 
 /* Tabs Header */
 .header-tabs {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(5px);
-    padding: 0.5rem 2rem;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    padding: 0.2rem 2rem 0.2rem;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.12);
 }
 
 .tabs-bar {
     display: flex;
     gap: 8px;
     align-items: center;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: thin;
+    flex-wrap: wrap; /* allow wrapping to additional rows instead of horizontal scroll */
+    overflow: visible;
 }
 
 .tab {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
+    padding: 8px 12px;
     border: none;
     border-radius: 10px;
     background: transparent;
-    color: rgba(255,255,255,0.9);
+    color: #0f172a;
     cursor: pointer;
     font-size: 0.95rem;
     font-weight: 600;
     white-space: nowrap;
-    transition: all 0.2s ease;
+    transition: background .18s ease, color .18s ease, transform .12s ease;
     position: relative;
 }
 
 .tab:hover {
-    background: rgba(255,255,255,0.25);
+    background: #ffffffaa;
 }
 
 .tab.active {
     background: #ffffff;
-    color: var(--text-dark);
-    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    color: #0f172a;
 }
 
 .tab-close {
@@ -243,13 +383,12 @@ body {
 }
 
 .btn-primary {
-    background: var(--accent);
+    background: #667eea;
     color: white;
-    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
 }
 
 .btn-primary:hover {
-    background: var(--accent-hover);
+    background: #5568d3;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
@@ -297,7 +436,7 @@ body {
 /* ===== MAIN CONTENT ===== */
 .main-content {
     flex: 1;
-    padding: 1.5rem 2rem 1rem;
+    padding: 0 2rem 0.75rem;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -306,12 +445,14 @@ body {
 
 .categories-container {
     display: flex;
-    gap: 1.25rem;
+    gap: 1.5rem;
     overflow-x: auto;
     overflow-y: hidden;
     flex: 1;
     min-height: 0;
-    padding-bottom: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 0.25rem;
+    scrollbar-gutter: stable both-edges;
 }
 
 /* ===== LISTS (Categories) ===== */
@@ -337,13 +478,15 @@ body {
 }
 
 .list-header {
-    display: flex;
+    display: grid;
+    grid-template-columns: 28px 1fr 28px; /* left spacer | centered title | settings btn */
     align-items: center;
-    gap: 0.75rem;
+    column-gap: 0.5rem;
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
     border-bottom: 2px solid #e0e0e0;
 }
+.list-header-spacer { width:28px; height:28px; }
 
 .list-title {
     flex: 1;
@@ -355,7 +498,7 @@ body {
     padding: 0.25rem 0.5rem;
     border-radius: 6px;
     transition: background 0.2s ease;
-    text-align: left;
+    text-align: center; /* centered list names */
 }
 
 .list-title[contenteditable="true"]:hover {
@@ -372,6 +515,194 @@ body {
     cursor: default !important;
     user-select: none;
 }
+
+/* List Resize Handles */
+.list .resize-handle {
+    position: absolute;
+    top: 0;
+    width: 8px;
+    height: 100%;
+    cursor: col-resize;
+    opacity: 0;
+    transition: opacity .12s ease;
+    z-index: 5;
+}
+
+.list:hover .resize-handle {
+    opacity: 0.4;
+}
+
+.list .resize-handle:hover {
+    opacity: 0.75;
+}
+
+.list .resize-handle.right {
+    right: -4px;
+}
+
+.list .resize-handle.left {
+    left: -4px;
+}
+
+.list .resize-handle::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    left: 50%;
+    width: 2px;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.12);
+    border-radius: 1px;
+}
+
+.list.resizing,
+.categories-container.resizing {
+    user-select: none;
+}
+
+/* List Settings Button (3-dot menu) */
+.list-settings-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #5a6278;
+    cursor: pointer;
+    position: relative;
+    z-index: 10;
+    transition: all 0.18s ease;
+}
+
+.list-settings-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+    color: #3a4050;
+    transform: scale(1.05);
+}
+
+.list-settings-btn:active {
+    transform: scale(0.98);
+}
+
+/* List Settings Menu Dropdown */
+.list-settings-menu {
+    position: fixed;
+    background: #ffffff; /* reverted to white */
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    padding: 0.5rem 0;
+    min-width: 200px;
+    z-index: 15000;
+    animation: slideIn 0.15s ease;
+    border: 1px solid rgba(0,0,0,0.08);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.list-settings-section {
+    padding: 0 0.5rem;
+    margin-bottom: 0.35rem;
+}
+
+.list-settings-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-light);
+    margin-bottom: 0.35rem;
+    padding: 0 0.35rem;
+}
+
+.list-settings-divider {
+    height: 1px;
+    background: rgba(0,0,0,0.06);
+    margin: 0.35rem 0;
+}
+
+.list-settings-item {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    font-size: 0.85rem;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 6px;
+    margin: 0 0.25rem;
+}
+
+.list-settings-item span {
+    font-size: 0.9rem;
+}
+
+.list-settings-item:hover {
+    background: rgba(0,0,0,0.04);
+}
+
+.list-settings-item.danger {
+    color: var(--danger);
+}
+
+.list-settings-item.danger:hover {
+    background: rgba(239, 68, 68, 0.08);
+}
+
+/* Color swatches in menu */
+.color-swatches {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    padding: 0.2rem;
+}
+
+.color-swatch-mini {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 2px solid rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.color-swatch-mini:hover {
+    transform: scale(1.1);
+    border-color: rgba(0,0,0,0.25);
+}
+
+.color-swatch-mini.active {
+    border-color: var(--accent);
+    border-width: 2.5px;
+    transform: scale(1.05);
+}
+
+.list-settings-menu .menu-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 /* ===== CARDS ===== */
 .cards {
     display: flex;
@@ -386,21 +717,19 @@ body {
 
 .card {
     background: var(--card-bg);
-    border-radius: 10px;
-    padding: 0.85rem 1rem;
-    box-shadow: var(--shadow-card);
+    border-radius: 8px;
+    padding: 1.4rem 1rem 0.9rem; /* extra top space for inline controls */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     cursor: pointer;
     position: relative;
     transition: box-shadow 0.15s ease, transform 0.15s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    border: 1px solid rgba(0,0,0,.04);
+    overflow: visible;
 }
 
 .card:hover {
-    box-shadow: var(--shadow-card-hover);
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0,0,0,0.20);
     transform: translateY(-2px);
+    background: #ffffff;
 }
 
 .card.dragging {
@@ -414,6 +743,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    margin-top: 10px; /* create space so floating icon buttons no longer overlap text */
 }
 
 .card-name {
@@ -421,12 +751,196 @@ body {
     color: var(--text-dark);
     font-size: 0.95rem;
     line-height: 1.4;
+    white-space: pre-wrap;          /* wrap and preserve manual line breaks */
+    overflow-wrap: anywhere;        /* break long words/URLs */
+    word-break: break-word;         /* ensure wrap even without spaces */
 }
 
 .card-due {
     font-size: 0.8rem;
-    color: var(--text-light);
+    color: #555;
+    white-space: nowrap;
 }
+
+/* Card Hover Controls */
+.card-head {
+    position: static;
+    height: 0;
+    pointer-events: none;
+}
+
+.card-head-left,
+.card-head-right {
+    position: absolute;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: auto;
+    height: 24px;
+    transition: opacity 0.18s ease;
+}
+
+.card-head-left {
+    top: 8px; /* slightly above text */
+    left: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.card-head-right {
+    top: 8px; /* slightly above text */
+    right: 0.5rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.card:hover .card-head-left,
+.card:hover .card-head-right,
+.card-head-left:hover,
+.card-head-right:hover {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Icon buttons in hover controls */
+.card-head-left .icon-btn,
+.card-head-right .icon-btn {
+    width: 26px;
+    height: 22px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    color: #5a6278;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.12s ease;
+}
+
+.card-head-left .icon-btn:hover,
+.card-head-right .icon-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: #3a4050;
+}
+
+/* Priority colors applied inline via JS; add subtle background tints */
+.flag-btn[style*="#ef4444"] { background: rgba(239,68,68,0.10); border-color: rgba(239,68,68,0.35); }
+.flag-btn[style*="#f59e0b"] { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.35); }
+.flag-btn[style*="#10b981"] { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.35); }
+
+/* Inline date picker popup */
+.date-pop {
+    position: absolute;
+    z-index: 10000;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 10px;
+    padding: 0.6rem 0.7rem 0.7rem;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 210px;
+    font-size: 0.75rem;
+}
+.date-pop-input {
+    width: 100%;
+    padding: 0.35rem 0.45rem;
+    font-size: 0.75rem;
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 6px;
+    background: #fafafa;
+}
+.date-pop-input:focus { outline: 2px solid #667eea; outline-offset: 2px; }
+.date-pop-buttons { display: flex; justify-content: space-between; gap: 0.5rem; }
+.date-pop-buttons button {
+    flex: 1;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid rgba(0,0,0,0.2);
+    background: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.date-pop-clear:hover { background: rgba(239,68,68,0.10); color:#ef4444; }
+.date-pop-close:hover { background: rgba(0,0,0,0.06); }
+
+/* Priority label badge inside card */
+.priority-label {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 2px 6px 3px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    line-height: 1;
+    background: rgba(0,0,0,0.06);
+    color: #444;
+    border: 1px solid rgba(0,0,0,0.12);
+    pointer-events: none;
+}
+.priority-label.high { background: rgba(239,68,68,0.10); color:#b91c1c; border-color: rgba(239,68,68,0.35); }
+.priority-label.medium { background: rgba(245,158,11,0.15); color:#92400e; border-color: rgba(245,158,11,0.35); }
+.priority-label.low { background: rgba(16,185,129,0.15); color:#065f46; border-color: rgba(16,185,129,0.35); }
+
+.card-head-right .complete-btn:hover {
+    color: #16a34a;
+    background: rgba(22, 163, 74, 0.10);
+    border-color: rgba(22, 163, 74, 0.35);
+}
+
+.card-head-right .delete-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.10);
+    border-color: rgba(239, 68, 68, 0.35);
+}
+
+.card-head-left .icon-btn:active,
+.card-head-right .icon-btn:active {
+    transform: scale(0.98);
+}
+
+/* SVG icons in buttons */
+.icon-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+}
+
+/* Due date row when set */
+.card.has-due { padding-top: 0.85rem; }
+
+/* Compact inline due date row inside card text */
+.card-due-row {
+    position: static;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    margin-top: 2px;
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+    width: auto;
+    animation: none;
+    transform: none;
+}
+.card-due-row .card-date-btn { opacity: 1 !important; width:18px; height:18px; border:0; background:none; padding:0; display:inline-flex; align-items:center; justify-content:center; }
+.card-due-row .card-date-btn svg { width: 14px; height:14px; }
+.card-due-row .card-due { font-size: 0.7rem; color:#555; }
 
 .card .trash {
     background: transparent;
@@ -449,31 +963,29 @@ body {
     background: rgba(239, 68, 68, 0.1);
     transform: scale(1.1);
 }
-.complete-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: none;
-  background: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.15s ease;
-  padding: 0;
+.add-list-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 10px 14px; /* smaller, sleeker */
+    cursor: pointer;
+    font-size: 0.85rem; /* slightly smaller */
+    font-weight: 600;
+    color: var(--accent);
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.15s ease;
+    width: 100%;
+    justify-content: center;
 }
-.complete-btn:hover { transform: scale(1.1); }
-
-.complete-btn .check-icon {
-  width: 22px;
-  height: 22px;
-  stroke: #6b778c;
-  fill: none;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transition: stroke 0.2s ease, transform 0.15s ease;
+.add-list-btn:hover {
+    background: rgba(0,0,0,0.04);
+    border-color: rgba(0,0,0,0.18);
+    transform: translateY(-2px);
 }
+.add-list-btn:active { transform: translateY(0); }
+/* removed stray transition line */
 
 .complete-btn.completed .check-icon .circle {
   stroke: #2ecc71;
@@ -521,23 +1033,22 @@ body {
 
 .small {
     background: transparent;
-    color: var(--text-light);
+    color: #666;
     padding: 0.65rem 1rem;
     border-radius: 8px;
-    border: 2px dashed rgba(0,0,0,.15);
+    border: 2px dashed rgba(0,0,0,.12);
     cursor: pointer;
     font-weight: 600;
     font-size: 0.9rem;
-    transition: all 0.2s ease;
+    transition: all 0.18s ease;
     width: 100%;
     text-align: center;
 }
 
 .small:hover {
-    background: rgba(255,255,255,0.7);
-    border-color: var(--accent);
-    color: var(--accent);
-    transform: translateY(-1px);
+    background: rgba(102, 126, 234, 0.06);
+    border-color: #667eea;
+    color: #667eea;
 }
 
 .small.save {
@@ -564,20 +1075,7 @@ body {
     box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
 }
 /* List Actions */
-.trash {
-    background: transparent;
-    border: 0;
-    color: var(--danger);
-    cursor: pointer;
-    padding: 0.25rem;
-    opacity: 0.6;
-    transition: all 0.2s ease;
-}
-
-.trash:hover {
-    opacity: 1;
-    transform: scale(1.1);
-}
+/* Removed inline list delete (X) button; styles retained only for card delete if needed */
 
 /* Drag & Drop States */
 .list.dragover {
@@ -795,44 +1293,50 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: 0 20px 60px rgba(0,0,0,.3);
-    width: 90%;
-    max-width: 450px;
-    z-index: 1001;
-    animation: slideUp 0.3s ease;
+    background: #ffffff; /* match user-profile-menu */
+    border-radius: 12px; /* match user-profile-menu */
+    padding: 1.25rem; /* slightly tighter like profile menu */
+    box-shadow: 0 8px 24px rgba(0,0,0,.15); /* match user-profile-menu */
+    width: clamp(320px, 90%, 440px);
+    max-width: 440px;
+    z-index: 20000; /* align with profile menu layer */
+    animation: none; /* open directly centered with no movement */
+    display: block;
+    color: var(--text-dark);
+}
+
+@keyframes settingsPop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(.92); }
+    55% { opacity: 1; transform: translate(-50%, -50%) scale(1.03); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 .settings-menu.hidden {
-    display: none;
+    display: none !important;
 }
 
 .settings-menu::before {
     content: '';
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,.4);
-    backdrop-filter: blur(4px);
+    inset: 0;
+    background: rgba(0,0,0,0.08);
+    /* no blur to avoid fuzzy edges around corners */
     z-index: -1;
 }
 
 .settings-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.25rem;
-    padding: 0.75rem;
+    gap: .6rem .75rem;
+    margin-bottom: .5rem;
+    padding: 0.6rem 0.75rem;
     border-radius: 10px;
-    transition: background 0.2s ease;
+    transition: background 0.16s ease;
 }
 
 .settings-row:hover {
-    background: rgba(0,0,0,.03);
+    background: rgba(0,0,0,0.04);
 }
 
 .settings-row label {
@@ -840,6 +1344,7 @@ body {
     font-weight: 600;
     color: var(--text-dark);
     margin-right: 1rem;
+    grid-column: 2 / auto;
 }
 
 .settings-row input[type="color"],
@@ -853,6 +1358,24 @@ body {
     max-width: 150px;
 }
 
+/* leading icon for each settings row */
+.settings-icon {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    color: #4b5563;
+}
+
+.settings-row input,
+.settings-row button,
+.settings-row .stock-list,
+.settings-row input[type="file"] {
+    grid-column: 3 / auto;
+}
+
 @keyframes slideUp {
     from {
         opacity: 0;
@@ -863,9 +1386,7 @@ body {
         transform: translate(-50%, -50%);
     }
 }
-.card-text{display:flex;flex-direction:column;gap:4px}
-.card-name{font-weight:600}
-.card-due{font-size:12px;color:#6b778c}
+/* Removed older compact duplicate card text rules (card-text/card-name/card-due) to avoid override conflicts */
 /* Stock Images */
 .stock-list {
     display: flex;
@@ -996,25 +1517,7 @@ body {
 #board{ display:flex; align-items:flex-start; gap:12px; padding:18px; overflow:auto; height:calc(100vh - 64px); }
 .list.dragover{ outline:3px dashed rgba(2,106,167,.25); border-radius:6px }
 #settings-menu input[type="range"]{ width:140px; vertical-align:middle }
-.list-brush{
-    position: absolute;
-    right: 12px;
-    top: 12px;
-    width: 22px;
-    height: 22px;
-    border-radius: 10px;
-    border: 0;
-    background: linear-gradient(180deg, #0e86d1, #056aa6);
-    color: #fff;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    box-shadow: 0 8px 20px rgba(2,106,167,0.22);
-    z-index: 60;
-    outline: none;
-}
+/* Removed deprecated dashed add-list-btn variant (modern style defined earlier) */
 .color-palette{
     position: absolute;
     right: 12px;
@@ -1033,6 +1536,61 @@ body {
 }
 .color-palette.hidden{ display:none; opacity:0; pointer-events:none; }
 .color-palette.open{ display:flex; opacity:1; pointer-events:auto; animation: pop 160ms cubic-bezier(.2,.8,.2,1); }
+
+/* Dark Mode Support */
+body.dark-mode {
+    --text-dark: #e5e7eb;
+    --text-light: #9ca3af;
+    --card-bg: #1f2937;
+    --list-bg: #111827;
+}
+
+body.dark-mode .header {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+}
+
+body.dark-mode .list {
+    background: rgba(31, 41, 55, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .card {
+    background: #374151;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #e5e7eb;
+}
+
+body.dark-mode .card:hover {
+    background: #4b5563;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .list-title,
+body.dark-mode .card-name {
+    color: #f3f4f6;
+}
+
+body.dark-mode .settings-menu,
+body.dark-mode .user-profile-menu,
+body.dark-mode .list-settings-menu {
+    background: #1f2937;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .user-profile-item,
+body.dark-mode .list-settings-item {
+    color: #e5e7eb;
+}
+
+body.dark-mode .user-profile-item:hover,
+body.dark-mode .list-settings-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .modal-content {
+    background: #1f2937;
+    color: #e5e7eb;
+}
 .color-palette::before{
     content: "";
     position: absolute;
@@ -1118,20 +1676,8 @@ body {
         width: 280px;
     }
     
-    .settings-menu {
-        width: 95%;
-        padding: 1.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .header-top {
-        padding: 0.5rem 0.75rem;
-    }
-    
-    .header h1 {
-        font-size: 1.25rem;
-    }
+    /* settings-row retains desktop styling (no override needed) */
+    .header h1 { font-size: 1.5rem; }
     
     .btn-small {
         padding: 0.4rem 0.75rem;
