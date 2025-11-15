@@ -1438,276 +1438,41 @@ body {
     opacity:0.85;
 }
 .card.completed .card-name{
-    text-decoration:line-through;
-    opacity:0.8;
-}
-/* Complete Button */
-.complete-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid rgba(0,0,0,0.15);
-    background: #fff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0;
-    flex-shrink: 0;
-    transition: all 0.2s ease;
-    position: relative;
+    text-decoration: none;
+    opacity: 1;
 }
 
-.complete-btn:hover {
-    border-color: var(--success);
-    background: rgba(90, 172, 68, 0.05);
-    transform: scale(1.05);
-}
-
-.complete-btn.completed {
-    background: var(--success);
-    border-color: var(--success);
-}
-
-.complete-btn:focus {
-    outline: 2px solid rgba(102, 126, 234, 0.3);
-    outline-offset: 2px;
-}
-.firework-particle{
-    position:absolute;
-    width:8px;
-    height:8px;
-    border-radius:50%;
-    pointer-events:none;
-    opacity:0;
-    transform:translate(-50%,-50%) scale(1);
-    animation:fw 700ms ease-out forwards;
-}
-@keyframes fw {
-    0%{ opacity:1; transform: translate(-50%,-50%) scale(1); }
-    100%{ opacity:0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.6); }
-}
-.drag-ghost{
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    transform-origin: center center;
-    border-radius:8px;
-    overflow:hidden;
-    opacity:0.98;
-    will-change: transform, opacity;
-    transition: transform 80ms linear;
-    pointer-events:none;
-}
-.card.dragging{
-    opacity:0.35;
-    transform: scale(0.99);
-}
-.list.list-hover{
-    outline: 3px dashed rgba(2,106,167,0.28);
-    transform: translateY(-6px);
-    transition: transform 140ms ease, outline-color 120ms ease;
-    box-shadow: 0 10px 30px rgba(2,6,23,0.06);
-}
-.board-will-change { will-change: background-image, background-color; }
-.list.done-list {
-    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-    border: 1px solid rgba(0,0,0,0.04);
-}
-.list[draggable="true"] { cursor: grab; }
-.list.done-list { cursor: default; }
-#board{ display:flex; align-items:flex-start; gap:12px; padding:18px; overflow:auto; height:calc(100vh - 64px); }
-.list.dragover{ outline:3px dashed rgba(2,106,167,.25); border-radius:6px }
-#settings-menu input[type="range"]{ width:140px; vertical-align:middle }
-/* Removed deprecated dashed add-list-btn variant (modern style defined earlier) */
-.color-palette{
+/* Remove the green circle - just show checkmark */
+.card.completed::before {
+    content: '';
     position: absolute;
-    right: 12px;
-    top: 44px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 6px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 10px 20px rgba(2,6,23,0.12);
-    z-index: 30;
-    align-items: flex-end;
-    min-width: 28px;
-    transform-origin: top right;
-}
-.color-palette.hidden{ display:none; opacity:0; pointer-events:none; }
-.color-palette.open{ display:flex; opacity:1; pointer-events:auto; animation: pop 160ms cubic-bezier(.2,.8,.2,1); }
-
-/* Dark Mode Support */
-body.dark-mode {
-    --text-dark: #e5e7eb;
-    --text-light: #9ca3af;
-    --card-bg: #1f2937;
-    --list-bg: #111827;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    background-image: url('Icons/checkmark.svg');
+    background-size: 12px 12px;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: brightness(0) saturate(100%) invert(58%) sepia(96%) saturate(2421%) hue-rotate(95deg) brightness(97%) contrast(81%);
+    /* This filter makes the SVG green (#22c55e) */
+    z-index: 2;
+    pointer-events: none;
 }
 
-body.dark-mode .header {
-    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+/* Remove the ::after pseudo-element */
+.card.completed::after {
+    display: none;
 }
 
-body.dark-mode .list {
-    background: rgba(31, 41, 55, 0.95) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+/* Adjust card padding when completed to make room for checkmark */
+.card.completed {
+    padding-left: 37px;
 }
 
-body.dark-mode .card {
-    background: #374151;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    color: #e5e7eb;
+/* Optional: slightly dim the card background when completed */
+.card.completed {
+    background: #f9fafb;
+    opacity: 0.95;
 }
-
-body.dark-mode .card:hover {
-    background: #4b5563;
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-body.dark-mode .list-title,
-body.dark-mode .card-name {
-    color: #f3f4f6;
-}
-
-body.dark-mode .settings-menu,
-body.dark-mode .user-profile-menu,
-body.dark-mode .list-settings-menu {
-    background: #1f2937;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-body.dark-mode .user-profile-item,
-body.dark-mode .list-settings-item {
-    color: #e5e7eb;
-}
-
-body.dark-mode .user-profile-item:hover,
-body.dark-mode .list-settings-item:hover {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-body.dark-mode .modal-content {
-    background: #1f2937;
-    color: #e5e7eb;
-}
-.color-palette::before{
-    content: "";
-    position: absolute;
-    right: 18px;
-    top: -8px;
-    width: 12px;
-    height: 12px;
-    background: #fff;
-    transform: rotate(45deg);
-    box-shadow: -2px -2px 6px rgba(2,6,23,0.04);
-    z-index: -1;
-}
-.color-swatch{
-    width: 24px;
-    height: 16px;
-    border-radius: 8px;
-    border: 2px solid rgba(0,0,0,0.06);
-    cursor: pointer;
-    padding:0;
-    display:inline-block;
-    transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
-    outline: none;
-}
-.color-swatch:hover,
-.color-swatch:focus {
-    transform: translateX(-6px);
-    box-shadow: 0 8px 20px rgba(2,106,167,0.12);
-    border-color: rgba(2,106,167,0.18);
-}
-.color-swatch.selected{
-    transform: translateX(-6px);
-    box-shadow: 0 12px 18px rgba(2,106,167,0.18);
-    border-color: rgba(2,106,167,0.28);
-    outline: 3px solid rgba(255,255,255,0.25);
-}
-.color-picker-wrap { display:flex; align-items:center; justify-content:flex-end; }
-.color-picker{
-    width: 14px;
-    height: 16px;
-    border-radius: 8px;
-    border: 2px solid rgba(0,0,0,0.06);
-    padding: 0;
-    cursor: pointer;
-    background: transparent;
-}
-@keyframes pop { from{ transform: translateY(-6px) scale(.98); opacity:0 } to { transform: translateY(0) scale(1); opacity:1 } }
-.color-swatch:focus,
-.color-picker:focus,
-.list-brush:focus { outline: 3px solid rgba(2,106,167,0.18); outline-offset: 2px; }
-@media (max-width:520px){
-    .list-brush{ width:36px; height:36px; font-size:16px; top:6px; right:6px; }
-    .color-palette{ top:46px; right:6px; }
-    .color-swatch, .color-picker { width:40px; height:32px; }
-}
-.header { position:relative; z-index: 500; }
-.color-palette { z-index: 70; }
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .header-top {
-        padding: 0.75rem 1rem;
-        flex-wrap: wrap;
-    }
-    
-    .header h1 {
-        font-size: 1.5rem;
-    }
-    
-    .header-tabs {
-        padding: 0.5rem 1rem;
-    }
-    
-    .main-content {
-        padding: 1rem;
-    }
-    
-    .categories-container {
-        gap: 1rem;
-    }
-    
-    .list {
-        min-width: 250px;
-        width: 280px;
-    }
-    
-    /* settings-row retains desktop styling (no override needed) */
-    .header h1 { font-size: 1.5rem; }
-    
-    .btn-small {
-        padding: 0.4rem 0.75rem;
-        font-size: 0.8rem;
-    }
-    
-    .list {
-        min-width: 220px;
-        width: 250px;
-    }
-    
-    .tab {
-        padding: 6px 12px;
-        font-size: 0.85rem;
-    }
-}
-
-/* Modal overlay for inline forms */
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease}
-.modal-overlay.hidden{display:none}
-.modal-content{background:#fff;border-radius:16px;padding:28px;max-width:440px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:slideUp 0.3s ease}
-.modal-header{font-size:20px;font-weight:700;margin-bottom:20px;color:#172b4d}
-.modal-body{margin-bottom:24px}
-.modal-input{width:100%;padding:12px 16px;border:2px solid rgba(0,0,0,.08);border-radius:10px;font-size:15px;font-family:inherit;transition:all 0.2s ease}
-.modal-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px rgba(2,106,167,.1)}
-.modal-footer{display:flex;gap:12px;justify-content:flex-end}
-.modal-btn{padding:10px 20px;border-radius:8px;border:0;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.2s ease}
-.modal-btn.primary{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(2,106,167,.2)}
-.modal-btn.primary:hover{background:#015082;box-shadow:0 4px 12px rgba(2,106,167,.3);transform:translateY(-1px)}
-.modal-btn.secondary{background:#e0e0e0;color:#333}
-.modal-btn.secondary:hover{background:#d0d0d0}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
